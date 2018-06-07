@@ -1,0 +1,29 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<div class="container">
+  <h1>
+    Welcome to {{ title }}!
+  </h1>
+  <app-stepper>
+    <app-step name="CompanyData" title="Company Data" [completed]="step1.completed">
+      <div class="row">
+        <div class="col-xs-12">
+            Hi there!
+            <br />
+            <br />
+        </div>
+      </div>
+      <div class="row">
+          <div class="col-xs-12">
+              <input type="checkbox" [checked]="step1.completed" (change)="step1.completed = !step1.completed" /> Completed
+          </div>
+      </div>
+      
+    </app-step>    
+    <app-step name="SalesSetup" title="Sales Setup">
+      This is the Sales Setup
+    </app-step>
+  </app-stepper>
+</div>
+

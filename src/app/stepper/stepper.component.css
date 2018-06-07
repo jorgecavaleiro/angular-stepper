@@ -1,0 +1,61 @@
+.stepper {
+    border-left: solid 1px #dedede;
+    position: relative;
+    margin: 20px 10px 10px 10px;
+}
+
+.stepper .title {
+    cursor: pointer;
+    line-height: 28px;
+    padding: 6px 0 2px 0;
+}
+
+.step-label {
+    margin: 0;
+    padding: 4px 0 0 22px;
+}
+
+.disabled .step-label {
+    color: #dedede;
+    cursor: no-drop;
+}
+
+.step .title {
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.step .container {
+    padding: 14px;
+    margin-left: 20px;
+}
+
+.step-badge {
+    position: absolute;
+    left: -13px;
+    border-radius: 50%;
+    line-height: 24px;
+    width: 24px;
+    font-size: 0.8em;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    background: #646464;
+}
+
+.disabled .step-badge {
+    cursor: no-drop;
+}
+
+.selected .step-badge {
+    background: #007bff;
+}
+
+.disabled .step-badge {
+    background: #dedede;
+}
+
+.stepper .container {
+    padding: 10px 0 8px 36px;
+}
+

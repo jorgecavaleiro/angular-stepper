@@ -1,0 +1,11 @@
+<div class="step" [class.selected]="step.selected" [class.disabled]="!step.enabled">
+  <div class="title" (click)="select()" >
+    <div class="step-badge">{{ index + 1}}</div>
+    <h4 class="step-label" [class.disabled]="!step.enabled">{{ title }}</h4>
+  </div>
+  <div class="container" *ngIf="step.selected">
+    {{ content }}
+    <ng-content></ng-content>
+  </div>      
+</div>
+
