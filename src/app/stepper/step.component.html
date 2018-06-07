@@ -4,8 +4,18 @@
     <h4 class="step-label" [class.disabled]="!step.enabled">{{ title }}</h4>
   </div>
   <div class="container" *ngIf="step.selected">
-    {{ content }}
-    <ng-content></ng-content>
+    <div class="row">
+      <div class="col-xs-12">
+        {{ content }}
+        <ng-content></ng-content>        
+      </div>
+    </div>
+    <div class="step-footer btn-group">
+        <button type="button" class="btn btn-primary" (click)="next()" [class.disabled]="nextStepPending" >Next</button>      
+    </div>
+    <div class="float-right">
+        <span [hidden]="!nextStepPending">processing...</span>
+    </div>
   </div>      
 </div>
 

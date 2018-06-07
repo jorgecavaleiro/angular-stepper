@@ -19,6 +19,7 @@ export class Step {
 
   // constructor
   constructor(name: string, title: string) {
+    this.index = -1;
     this.name = name;
     this.title = title;
     this.completed = false;
@@ -38,6 +39,9 @@ export class StepComponent implements OnInit {
   private _step: Step;
   private _index: number;
 
+  // Public properties
+  public nextStepPending: boolean;
+
   // @Input and @Output
 
   @Input() name: string;
@@ -53,12 +57,17 @@ export class StepComponent implements OnInit {
     }
     if (value) {
       console.log(`step ${name} has completed`);
+      this.oncomplete.emit(this._step);
+      if (this.nextStepPending) {
+        this.nextStepPending = false;
+      }
     }
     this._step.completed = value;
   }
 
   @Output() onselect = new EventEmitter<string>();
-  @Output() oncompleted = new EventEmitter<string>();
+  @Output() oncomplete = new EventEmitter<Step>();
+  @Output() onnextstep = new EventEmitter<Step>();
 
   // Getters
 
@@ -84,19 +93,38 @@ export class StepComponent implements OnInit {
   // Public Methods
 
   select() {
-    if (!this._step.selected && !this._step.enabled) {
+    if (this._step === undefined || (!this._step.selected && !this._step.enabled) ) {
       return;
     }
     this.onselect.emit(this._step.name);
     this._step.selected = true;
   }
 
+  next() {
+    console.log('entering next action...');
+    if (this._step === undefined || (!this._step.selected && !this._step.enabled) ) {
+      return;
+    }
+    console.log('go to the next step pending...');
+    this.nextStepPending = true;
+    this.onnextstep.emit(this._step);
+  }
+
   setIndex(idx: number) {
     this._index = idx;
+    this._step.index = idx;
   }
 
   getStepSelectedEmitter() {
     return this.onselect;
+  }
+
+  getStepCompletedEmitter() {
+    return this.oncomplete;
+  }
+
+  getNextStepEmitter() {
+    return this.onnextstep;
   }
 }
 
@@ -108,7 +136,7 @@ export class StepComponent implements OnInit {
   selector: 'app-stepper',
   template: `
     <div class="stepper">
-      <app-step *ngFor="let s of steps" (onselect)="onStepSelected($event)"></app-step>
+      <app-step *ngFor="let s of steps" (onselect)="onStepSelected($event)" (oncomplete)="onStepCompleted($event)"></app-step>
       <ng-content></ng-content>
     </div>`,
   styleUrls: ['./stepper.component.css']
@@ -121,19 +149,37 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   @ContentChildren(StepComponent) stepComponents: QueryList<StepComponent>;
 
   // Private members
-  currentStep: number;
-  allSteps: Step[] = [];
-  subscriptions: EventEmitter<string>[] = [];
+  private _currentStepIdx: number;
+  private _allSteps: Step[] = [];
+  private _subscriptions: EventEmitter<any>[] = [];
+  private _stepComponents: StepComponent[];
 
   // Constructors
   constructor(private http: HttpClient) {
-    this.currentStep = 0;
+    this._currentStepIdx = 0;
   }
 
+  // When some step is selected all other must be unselected
   onStepSelected(name: string) {
-    this.allSteps.forEach(el  => {
+    this._allSteps.forEach((el, idx)  => {
       if (el.name !== name) {
         el.selected = false;
+      } else {
+        this._currentStepIdx = idx;
+      }
+    });
+  }
+
+  // When some step has completed the next one becomes available
+  onStepCompleted(step: Step) {
+    console.log('step completed message received, for step:');
+    console.log(step);
+
+    this._stepComponents.forEach((el, idx) => {
+      if (idx === step.index + 1) {
+        console.log(`step ${el.index} is now enabled`);
+        el.step.enabled = true;
+        el.select();
       }
     });
   }
@@ -145,13 +191,12 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   ngAfterContentInit() {
     console.log('entering after content init event..');
 
-    const contentStepsComponents: StepComponent[] = this.stepComponents.toArray();
-    console.log(contentStepsComponents);
+    this._stepComponents = this.stepComponents.toArray();
 
-    contentStepsComponents.forEach((el, idx) => {
+    this._stepComponents.forEach((el, idx) => {
       el.setIndex(idx);
 
-      this.allSteps.push(el.step);
+      this._allSteps.push(el.step);
 
       // check first step
       if (idx === 0) {
@@ -163,8 +208,12 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
       }
 
       // subscribe to the OnSelect event
-      this.subscriptions.push(el.getStepSelectedEmitter());
-      this.subscriptions[idx].subscribe(item => this.onStepSelected(item));
+      let i = this._subscriptions.push(el.getStepSelectedEmitter());
+      this._subscriptions[i - 1].subscribe(item => this.onStepSelected(item));
+
+      // subscribe to the OnComplete event
+      i = this._subscriptions.push(el.getStepCompletedEmitter());
+      this._subscriptions[i - 1].subscribe(item => this.onStepCompleted(item));
     });
   }
 
@@ -173,7 +222,7 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   }
 
   ngOnDestroy() {
-    this.subscriptions.forEach(s => {
+    this._subscriptions.forEach(s => {
       s.unsubscribe();
     });
   }
