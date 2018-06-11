@@ -26,8 +26,6 @@ export class Step {
   }
 }
 
-export type CanMoveNextFunc = (source: Step) => boolean;
-
 // ---------------------------------------------------------------
 //   <app-step> Component
 // ---------------------------------------------------------------
@@ -45,14 +43,11 @@ export class StepComponent implements OnInit {
   private _step: Step;
   private _index: number;
 
-  // Public properties
-  public nextStepPending: boolean;
-
   // @Input and @Output
 
   @Input() name: string;
   @Input() title: string;
-  @Input() canMoveNext: CanMoveNextFunc;
+  @Input() canMoveNext: boolean;
 
   get completed(): boolean {
     return this._step.completed;
@@ -65,9 +60,6 @@ export class StepComponent implements OnInit {
     if (value) {
       console.log(`step ${name} has completed`);
       this.oncomplete.emit(this._step);
-      if (this.nextStepPending) {
-        this.nextStepPending = false;
-      }
     }
     this._step.completed = value;
   }
@@ -112,12 +104,6 @@ export class StepComponent implements OnInit {
     if (this._step === undefined || (!this._step.selected && !this._step.enabled) ) {
       return;
     }
-    console.log('go to the next step pending...');
-
-    if (!this.completed) {
-      this.nextStepPending = true;
-    }
-
     this.onnextstep.emit(this._step);
   }
 
@@ -187,7 +173,6 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
       if (idx === step.index + 1) {
         console.log(`step ${el.index} is now enabled`);
         el.step.enabled = true;
-        el.select();
       }
     });
   }
@@ -195,10 +180,22 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   // When next step action resquested, if the current step is completed, then selects the next
   onNextStep(step: Step) {
     console.log('onNextStep event received..');
-    if (step.index < this._stepComponents.length - 1 && step.completed) {
+    if (step.index < this._stepComponents.length - 1) {
       console.log(`selecting the next: ${this._stepComponents[step.index + 1].title}`);
-      this._stepComponents[step.index + 1].step.enabled = true;
-      this._stepComponents[step.index + 1].select();
+
+      const currentStepComponent = this._stepComponents[step.index];
+      const nextStepComponent = this._stepComponents[step.index + 1];
+
+      let canCont = currentStepComponent.step.completed;
+
+      if (canCont && currentStepComponent.canMoveNext !== undefined && currentStepComponent.canMoveNext != null) {
+        canCont = currentStepComponent.canMoveNext;
+      }
+
+      if (canCont) {
+        nextStepComponent.step.enabled = true;
+        nextStepComponent.select();
+      }
     }
   }
 

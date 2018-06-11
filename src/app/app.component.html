@@ -6,17 +6,16 @@
     Welcome to {{ title }}!
   </h1>
   <app-stepper>
-    <app-step name="CompanyData" title="Company Data" [completed]="step1.completed">
+    <app-step name="CompanyData" title="Company Data" [completed]="step1.completed" [canMoveNext]="step1Completed()">
       <div class="row">
-        <div class="col-xs-12">
-            Hi there!
-            <br />
-            <br />
+        <div class="form-group col-xs-12">
+          <label for="usr">Name:</label>
+          <input type="text" class="form-control" [ngModel]="name" (ngModelChange)="name=$event" id="usr">
         </div>
       </div>
       <div class="row">
           <div class="col-xs-12">
-              <input type="checkbox" [checked]="step1.completed" (change)="step1.completed = !step1.completed" /> Completed
+              <input disabled type="checkbox" [checked]="step1.completed" (change)="step1.completed = !step1.completed" /> Completed
           </div>
       </div>
       
