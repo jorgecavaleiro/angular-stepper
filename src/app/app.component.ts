@@ -12,5 +12,6 @@ export class AppComponent {
 
   constructor() {
     // init;
+    this.step1.completed = true;
   }
 }

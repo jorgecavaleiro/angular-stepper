@@ -3,7 +3,7 @@ import { Component, EventEmitter, OnInit, Input, Output, ViewChild,
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 // ---------------------------------------------------------------
-//   <app-step>
+//   Step class
 // ---------------------------------------------------------------
 
 export class Step {
@@ -26,6 +26,12 @@ export class Step {
   }
 }
 
+export type CanMoveNextFunc = (source: Step) => boolean;
+
+// ---------------------------------------------------------------
+//   <app-step> Component
+// ---------------------------------------------------------------
+
 @Component({
   selector: 'app-step',
   templateUrl: './step.component.html',
@@ -46,6 +52,7 @@ export class StepComponent implements OnInit {
 
   @Input() name: string;
   @Input() title: string;
+  @Input() canMoveNext: CanMoveNextFunc;
 
   get completed(): boolean {
     return this._step.completed;
@@ -106,7 +113,11 @@ export class StepComponent implements OnInit {
       return;
     }
     console.log('go to the next step pending...');
-    this.nextStepPending = true;
+
+    if (!this.completed) {
+      this.nextStepPending = true;
+    }
+
     this.onnextstep.emit(this._step);
   }
 
@@ -172,9 +183,6 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
 
   // When some step has completed the next one becomes available
   onStepCompleted(step: Step) {
-    console.log('step completed message received, for step:');
-    console.log(step);
-
     this._stepComponents.forEach((el, idx) => {
       if (idx === step.index + 1) {
         console.log(`step ${el.index} is now enabled`);
@@ -182,6 +190,16 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
         el.select();
       }
     });
+  }
+
+  // When next step action resquested, if the current step is completed, then selects the next
+  onNextStep(step: Step) {
+    console.log('onNextStep event received..');
+    if (step.index < this._stepComponents.length - 1 && step.completed) {
+      console.log(`selecting the next: ${this._stepComponents[step.index + 1].title}`);
+      this._stepComponents[step.index + 1].step.enabled = true;
+      this._stepComponents[step.index + 1].select();
+    }
   }
 
   // OnInit interface implementation
@@ -203,8 +221,6 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
         el.step.selected = true;
         el.step.enabled = true;
         el.step.completed = true;
-        console.log('step selected:');
-        console.log(el.step);
       }
 
       // subscribe to the OnSelect event
@@ -214,6 +230,10 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
       // subscribe to the OnComplete event
       i = this._subscriptions.push(el.getStepCompletedEmitter());
       this._subscriptions[i - 1].subscribe(item => this.onStepCompleted(item));
+
+      // subscribe to the next step action event
+      i = this._subscriptions.push(el.getNextStepEmitter());
+      this._subscriptions[i - 1].subscribe(item => this.onNextStep(item));
     });
   }
 
