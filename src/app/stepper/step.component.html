@@ -6,15 +6,12 @@
   <div class="container" *ngIf="step.selected">
     <div class="row">
       <div class="col-xs-12">
-        {{ content }}
         <ng-content></ng-content>        
       </div>
     </div>
     <div class="step-footer btn-group">
-        <button type="button" class="btn btn-primary" (click)="next()" [class.disabled]="nextStepPending" >Next</button>      
-    </div>
-    <div class="float-right">
-        <span [hidden]="!nextStepPending">processing...</span>
+        <button *ngIf="!step.firstStep" type="button" (click)="back()" class="btn btn-link">Back</button>
+        <button *ngIf="!step.lastStep" type="button" class="btn btn-primary" (click)="next()" [class.disabled]="!canMoveNext" >{{ mainActionTitle }}</button>   
     </div>
   </div>      
 </div>

@@ -1,6 +1,5 @@
 import { Component, EventEmitter, OnInit, Input, Output, ViewChild,
   ViewChildren, QueryList, AfterViewInit, AfterContentInit, ContentChildren, OnDestroy } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 // ---------------------------------------------------------------
 //   Step class
@@ -16,6 +15,8 @@ export class Step {
   public enabled: boolean;
   public src: string;
   public content: string;
+  public lastStep: boolean;
+  public firstStep: boolean;
 
   // constructor
   constructor(name: string, title: string) {
@@ -23,6 +24,7 @@ export class Step {
     this.name = name;
     this.title = title;
     this.completed = false;
+    this.lastStep = false;
   }
 }
 
@@ -48,6 +50,7 @@ export class StepComponent implements OnInit {
   @Input() name: string;
   @Input() title: string;
   @Input() canMoveNext: boolean;
+  @Input() mainActionTitle: string;
 
   get completed(): boolean {
     return this._step.completed;
@@ -58,7 +61,6 @@ export class StepComponent implements OnInit {
       return;
     }
     if (value) {
-      console.log(`step ${name} has completed`);
       this.oncomplete.emit(this._step);
     }
     this._step.completed = value;
@@ -67,6 +69,7 @@ export class StepComponent implements OnInit {
   @Output() onselect = new EventEmitter<string>();
   @Output() oncomplete = new EventEmitter<Step>();
   @Output() onnextstep = new EventEmitter<Step>();
+  @Output() onpreviousstep = new EventEmitter<Step>();
 
   // Getters
 
@@ -81,6 +84,7 @@ export class StepComponent implements OnInit {
   // Constructors
 
   constructor() {
+    this.mainActionTitle = 'Next';
   }
 
   // OnInit interface implementation
@@ -107,6 +111,14 @@ export class StepComponent implements OnInit {
     this.onnextstep.emit(this._step);
   }
 
+  back() {
+    console.log('return to previous step...');
+    if (this._step === undefined || (!this._step.selected && !this._step.enabled) ) {
+      return;
+    }
+    this.onpreviousstep.emit(this._step);
+  }
+
   setIndex(idx: number) {
     this._index = idx;
     this._step.index = idx;
@@ -123,6 +135,10 @@ export class StepComponent implements OnInit {
   getNextStepEmitter() {
     return this.onnextstep;
   }
+
+  getPreviousStepEmitter() {
+    return this.onpreviousstep;
+  }
 }
 
 // ---------------------------------------------------------------
@@ -133,8 +149,8 @@ export class StepComponent implements OnInit {
   selector: 'app-stepper',
   template: `
     <div class="stepper">
-      <app-step *ngFor="let s of steps" (onselect)="onStepSelected($event)" (oncomplete)="onStepCompleted($event)"></app-step>
       <ng-content></ng-content>
+      <app-step *ngFor="let s of steps" (onselect)="onStepSelected($event)" (oncomplete)="onStepCompleted($event)"></app-step>
     </div>`,
   styleUrls: ['./stepper.component.css']
 })
@@ -152,7 +168,7 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   private _stepComponents: StepComponent[];
 
   // Constructors
-  constructor(private http: HttpClient) {
+  constructor() {
     this._currentStepIdx = 0;
   }
 
@@ -171,7 +187,6 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
   onStepCompleted(step: Step) {
     this._stepComponents.forEach((el, idx) => {
       if (idx === step.index + 1) {
-        console.log(`step ${el.index} is now enabled`);
         el.step.enabled = true;
       }
     });
@@ -179,9 +194,7 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
 
   // When next step action resquested, if the current step is completed, then selects the next
   onNextStep(step: Step) {
-    console.log('onNextStep event received..');
     if (step.index < this._stepComponents.length - 1) {
-      console.log(`selecting the next: ${this._stepComponents[step.index + 1].title}`);
 
       const currentStepComponent = this._stepComponents[step.index];
       const nextStepComponent = this._stepComponents[step.index + 1];
@@ -195,7 +208,18 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
       if (canCont) {
         nextStepComponent.step.enabled = true;
         nextStepComponent.select();
+      } else {
+        console.log('must complete current step before move to next!');
       }
+    }
+  }
+
+  // When previous step action resquested
+  onPreviousStep(step: Step) {
+    if (step.index > 0) {
+      const currentStepComponent = this._stepComponents[step.index];
+      const previousStepComponent = this._stepComponents[step.index - 1];
+      previousStepComponent.select();
     }
   }
 
@@ -218,6 +242,12 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
         el.step.selected = true;
         el.step.enabled = true;
         el.step.completed = true;
+        el.step.firstStep = true;
+      }
+
+      // check last step
+      if (idx === this.stepComponents.length - 1) {
+        el.step.lastStep = true;
       }
 
       // subscribe to the OnSelect event
@@ -231,6 +261,10 @@ export class StepperComponent implements OnInit, AfterViewInit, AfterContentInit
       // subscribe to the next step action event
       i = this._subscriptions.push(el.getNextStepEmitter());
       this._subscriptions[i - 1].subscribe(item => this.onNextStep(item));
+
+      // subscribe to the next step action event
+      i = this._subscriptions.push(el.getPreviousStepEmitter());
+      this._subscriptions[i - 1].subscribe(item => this.onPreviousStep(item));
     });
   }
 

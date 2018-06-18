@@ -46,6 +46,10 @@
 .step-footer {
    margin-top: 20px; 
 }
+.step-footer button {
+    margin: 0 5px;  
+    border-radius: 0;
+}
 
 .disabled .step-badge {
     cursor: no-drop;

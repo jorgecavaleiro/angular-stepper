@@ -6,23 +6,33 @@
     Welcome to {{ title }}!
   </h1>
   <app-stepper>
-    <app-step name="CompanyData" title="Company Data" [completed]="step1.completed" [canMoveNext]="step1Completed()">
-      <div class="row">
-        <div class="form-group col-xs-12">
-          <label for="usr">Name:</label>
-          <input type="text" class="form-control" [ngModel]="name" (ngModelChange)="name=$event" id="usr">
-        </div>
-      </div>
-      <div class="row">
-          <div class="col-xs-12">
-              <input disabled type="checkbox" [checked]="step1.completed" (change)="step1.completed = !step1.completed" /> Completed
+    <app-step name="Name" title="Fill out your name" [completed]="step1.completed" [canMoveNext]="step1Completed()">
+      <form #step1Form="ngForm" name="step1">
+        <div class="row">
+            <div class="form-group col-xs-12">
+              <label for="name">Name:</label>
+              <input type="text" class="form-control" id="name" name="name"
+                required minlength="4" 
+                [(ngModel)]="person.name" #nameModel="ngModel">
+                <div *ngIf="person.name.invalid && (person.name.dirty || person.name.touched)" class="alert alert-danger">
+                  <div *ngIf="person.name.errors.required">Name is required.</div>
+                  <div *ngIf="person.name.errors.minlength">Name must be at least 4 characters long.</div>
+                </div>
+            </div>
           </div>
-      </div>
-      
+      </form>
     </app-step>    
-    <app-step name="SalesSetup" title="Sales Setup">
-      This is the Sales Setup
+    <app-step name="Address" title="Fill out your address" [completed]="step2.completed" [canMoveNext]="step2.completed">
+      <div class="row">
+          <div class="form-group col-xs-12">
+              <label for="usr">Address:</label>
+              <input type="text" class="form-control" [ngModel]="address" (ngModelChange)="name=$event" id="address">
+            </div>
+      </div>      
     </app-step>
+    <app-step name="LastStep" title="Done">
+        All set and done!
+      </app-step>    
   </app-stepper>
 </div>
 
