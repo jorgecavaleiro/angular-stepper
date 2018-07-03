@@ -1,5 +1,7 @@
 import { Component } from '@angular/core';
 import { Step } from './stepper/stepper.component';
+import { FormGroup, FormControl, Validators, FormBuilder } from '@angular/forms';
+
 export class Person {
 
   constructor(
@@ -15,18 +17,25 @@ export class Person {
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']
 })
-export class AppComponent {
-  title = 'app';
-  person: Person;
-  step1: Step;
-  step2: Step;
 
-  constructor() {
-    // init;
-    // this.step1.completed = true;
-    this.person = new Person(0, '', '');
-    this.step1 = new Step('', '');
-    this.step2 = new Step('', '');
+export class AppComponent {
+
+  title = 'Employee admission';
+
+  step1Form: FormGroup;
+
+  firstName = new FormControl('', Validators.required);
+
+  constructor(fb: FormBuilder) {
+      this.step1Form = fb.group({
+          'firstName': this.firstName,
+          'lastName': ['', Validators.required]
+      });
+  }
+
+  onStep1Submit() {
+      console.log('model-based form submitted');
+      console.log(this.step1Form);
   }
 
   step1Completed = function() {

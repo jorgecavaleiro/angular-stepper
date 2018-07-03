@@ -3,36 +3,35 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 <div class="container">
   <h1>
-    Welcome to {{ title }}!
+    {{ title }}
   </h1>
   <app-stepper>
-    <app-step name="Name" title="Fill out your name" [completed]="step1.completed" [canMoveNext]="step1Completed()">
-      <form #step1Form="ngForm" name="step1">
+    <app-step name="Name" title="Fill out your name" [completed]="step1Form.valid" [canMoveNext]="step1Form.valid">
+      <form [formGroup]="step1Form" (ngSubmit)="onStep1Submit()">
         <div class="row">
-            <div class="form-group col-xs-12">
-              <label for="name">Name:</label>
-              <input type="text" class="form-control" id="name" name="name"
-                required minlength="4" 
-                [(ngModel)]="person.name" #nameModel="ngModel">
-                <div *ngIf="person.name.invalid && (person.name.dirty || person.name.touched)" class="alert alert-danger">
-                  <div *ngIf="person.name.errors.required">Name is required.</div>
-                  <div *ngIf="person.name.errors.minlength">Name must be at least 4 characters long.</div>
+            <div class="form-group">
+              <label for="firstName">First name</label>
+              <input class="form-control" type="text" formControlName="firstName">
+                <div *ngIf="firstName.invalid && (firstName.dirty || firstName.touched)" class="alert alert-danger">
+                  <div *ngIf="firstName.errors.required">First name is required.</div>
+                  <div *ngIf="firstName.errors.minlength">Name must be at least 4 characters long.</div>
                 </div>
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last name</label>
+              <input class="form-control" type="text" formControlName="lastName">
             </div>
           </div>
       </form>
-    </app-step>    
-    <app-step name="Address" title="Fill out your address" [completed]="step2.completed" [canMoveNext]="step2.completed">
+    </app-step>
+    <app-step name="Address" title="Fill out your address">
       <div class="row">
-          <div class="form-group col-xs-12">
-              <label for="usr">Address:</label>
-              <input type="text" class="form-control" [ngModel]="address" (ngModelChange)="name=$event" id="address">
-            </div>
-      </div>      
+
+      </div>
     </app-step>
     <app-step name="LastStep" title="Done">
         All set and done!
-      </app-step>    
+      </app-step>
   </app-stepper>
 </div>
 
